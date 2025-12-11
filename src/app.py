@@ -5,6 +5,7 @@ A super simple FastAPI application that allows students to view and sign up
 for extracurricular activities at Mergington High School.
 """
 
+import email
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
@@ -28,6 +29,42 @@ activities = {
         "participants": ["michael@mergington.edu", "daniel@mergington.edu"]
     },
     "Programming Class": {
+            "Soccer Team": {
+                "description": "Join the varsity soccer team and compete against other schools",
+                "schedule": "Mondays and Wednesdays, 4:00 PM - 6:00 PM",
+                "max_participants": 25,
+                "participants": ["alex@mergington.edu", "sarah@mergington.edu"]
+            },
+            "Swimming Club": {
+                "description": "Learn swimming techniques and train for competitions",
+                "schedule": "Tuesdays and Thursdays, 4:00 PM - 5:30 PM",
+                "max_participants": 20,
+                "participants": ["lucas@mergington.edu"]
+            },
+            "Art Studio": {
+                "description": "Explore various art mediums including painting, drawing, and sculpture",
+                "schedule": "Wednesdays, 3:30 PM - 5:30 PM",
+                "max_participants": 15,
+                "participants": ["emily@mergington.edu", "james@mergington.edu"]
+            },
+            "Drama Club": {
+                "description": "Participate in theatrical productions and improve acting skills",
+                "schedule": "Mondays and Thursdays, 3:30 PM - 5:00 PM",
+                "max_participants": 25,
+                "participants": ["isabella@mergington.edu", "noah@mergington.edu"]
+            },
+            "Debate Team": {
+                "description": "Develop critical thinking and public speaking through competitive debates",
+                "schedule": "Tuesdays, 3:30 PM - 5:00 PM",
+                "max_participants": 16,
+                "participants": ["ava@mergington.edu", "william@mergington.edu"]
+            },
+            "Science Olympiad": {
+                "description": "Compete in STEM challenges and prepare for regional competitions",
+                "schedule": "Thursdays, 3:30 PM - 5:00 PM",
+                "max_participants": 18,
+                "participants": ["mia@mergington.edu", "ethan@mergington.edu"]
+            },
         "description": "Learn programming fundamentals and build software projects",
         "schedule": "Tuesdays and Thursdays, 3:30 PM - 4:30 PM",
         "max_participants": 20,
@@ -62,6 +99,26 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
 
+    # Check if already signed up
+    if email in activity["participants"]:
+        raise HTTPException(status_code=400, detail="Student already signed up for this activity")
+
     # Add student
     activity["participants"].append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
+
+
+@app.delete("/activities/{activity_name}/participants/{email}")
+def unregister_from_activity(activity_name: str, email: str):
+    """Remove a student from an activity roster."""
+    if activity_name not in activities:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    activity = activities[activity_name]
+
+    try:
+        activity["participants"].remove(email)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Participant not found for this activity") from exc
+
+    return {"message": f"Removed {email} from {activity_name}"}
