@@ -3,6 +3,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  let messageTimeoutId;
+
+  const showMessage = (text, type) => {
+    clearTimeout(messageTimeoutId);
+    messageDiv.textContent = text;
+    messageDiv.className = type;
+    messageDiv.classList.remove("hidden");
+    messageTimeoutId = setTimeout(() => {
+      messageDiv.classList.add("hidden");
+    }, 5000);
+  };
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -12,6 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      activitySelect.value = "";
+
+      while (activitySelect.options.length > 1) {
+        activitySelect.remove(1);
+      }
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -41,7 +57,24 @@ document.addEventListener("DOMContentLoaded", () => {
         if (Array.isArray(details.participants) && details.participants.length) {
           details.participants.forEach((participantEmail) => {
             const listItem = document.createElement("li");
-            listItem.textContent = participantEmail;
+            listItem.className = "participant-item";
+
+            const emailSpan = document.createElement("span");
+            emailSpan.className = "participant-email";
+            emailSpan.textContent = participantEmail;
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "participant-delete";
+            deleteButton.dataset.activity = name;
+            deleteButton.dataset.email = participantEmail;
+            deleteButton.setAttribute(
+              "aria-label",
+              `Remove ${participantEmail} from ${name}`
+            );
+
+            listItem.appendChild(emailSpan);
+            listItem.appendChild(deleteButton);
             participantsList.appendChild(listItem);
           });
         } else {
@@ -86,25 +119,49 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (response.ok) {
-        messageDiv.textContent = result.message;
-        messageDiv.className = "success";
+        showMessage(result.message, "success");
         signupForm.reset();
+        await fetchActivities();
       } else {
-        messageDiv.textContent = result.detail || "An error occurred";
-        messageDiv.className = "error";
+        showMessage(result.detail || "An error occurred", "error");
       }
-
-      messageDiv.classList.remove("hidden");
-
-      // Hide message after 5 seconds
-      setTimeout(() => {
-        messageDiv.classList.add("hidden");
-      }, 5000);
     } catch (error) {
-      messageDiv.textContent = "Failed to sign up. Please try again.";
-      messageDiv.className = "error";
-      messageDiv.classList.remove("hidden");
+      showMessage("Failed to sign up. Please try again.", "error");
       console.error("Error signing up:", error);
+    }
+  });
+
+  // Use event delegation for delete buttons.
+  activitiesList.addEventListener("click", async (event) => {
+    const target = event.target;
+
+    if (!target.classList.contains("participant-delete")) {
+      return;
+    }
+
+    const { activity, email } = target.dataset;
+
+    if (!activity || !email) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/activities/${encodeURIComponent(activity)}/participants/${encodeURIComponent(email)}`,
+        { method: "DELETE" }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        showMessage(result.message, "success");
+        await fetchActivities();
+      } else {
+        showMessage(result.detail || "Unable to remove participant.", "error");
+      }
+    } catch (error) {
+      console.error("Error removing participant:", error);
+      showMessage("Failed to remove participant. Please try again.", "error");
     }
   });
 

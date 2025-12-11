@@ -157,20 +157,77 @@ footer {
 }
 
 .participants-list {
-  list-style: disc;
-  margin-left: 18px;
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
   display: grid;
   gap: 6px;
   color: #1f4068;
 }
 
-.participants-list li {
+.participant-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid #e0e4f5;
+  border-radius: 4px;
+  background-color: #f4f6ff;
+}
+
+.participant-email {
+  flex: 1;
   font-size: 14px;
-  padding-left: 4px;
+  word-break: break-word;
+}
+
+.participant-delete {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.participant-delete::before,
+.participant-delete::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 14px;
+  background-color: #c62828;
+  border-radius: 1px;
+  transform-origin: center;
+}
+
+.participant-delete::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.participant-delete::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.participant-delete:hover {
+  background-color: #fbe9e7;
+  border-color: #ffcdd2;
+}
+
+.participant-delete:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.2);
 }
 
 .participants-empty {
   list-style: none;
   color: #6d6d6d;
   font-style: italic;
+  padding: 6px 0;
 }
